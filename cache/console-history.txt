@@ -1,0 +1,24 @@
+await marketplaceNew.withdrawSaleFunds()
+await marketplace.withdrawSaleFunds()
+await marketplace.WithdrawSaleFunds()
+console.log(await marketplaceNew.ownerOf(3))
+console.log(await marketplaceNew.tokenURI(3))
+const marketplaceNew = await Marketplace.attach("0x5D6b5d0e423E4E706D43E88e91E4af77121e7445")
+console.log(await marketplace.tokenURI(3))
+console.log(await marketplace.getListedTokenForId(127))
+const marketplace = await Marketplace.attach("0xA95F42B5954553146568d38698176A1B5DF0E61a");
+const Marketplace = await hre.ethers.getContractFactory("NFTMarketplace")
+const marketplace = await Marketplace.attach("0xA95F42B5954553146568d38698176A1B5DF0E61a");
+const Marketplace = await hre.ethers.getContractFactory
+const Marketplace = await hre.ethers.getContractFactory("NFTMarketplace");
+const marketplace = await Marketplace.attach("0xA95F42B5954553146568d38698176A1B5DF0E61a")
+const Marketplace = await hre.ethers.getContractFactory
+await marketplace.tokenURI(127);
+console.log(await marketplace.tokenURI(127));
+console.log(await marketplace.tokenURI(1));
+console.log(await marketplace.tokenURI(6));
+console.log(await marketplace.tokenURI(7));
+console.log(await marketplace.getUri(7));
+console.log(await marketplace.getURI(7));
+const marketplace = await Marketplace.attach("0xA95F42B5954553146568d38698176A1B5DF0E61a");
+const Marketplace = await hre.ethers.getContractFactory("NFTMarketplace");
