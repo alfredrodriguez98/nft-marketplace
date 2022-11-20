@@ -1,5 +1,4 @@
 import Navbar from "./Navbar";
-import axie from "../tile.jpeg";
 import { useLocation, useParams } from "react-router-dom";
 import MarketplaceJSON from "../Marketplace.json";
 import axios from "axios";
@@ -82,6 +81,12 @@ export default function NFTPage(props) {
   const tokenId = params.tokenId;
   if (!dataFetched) getNFTData(tokenId);
 
+  /*
+Owner: <span className="text-sm">{data.owner}</span>
+  */
+
+
+
   return (
     <div style={{ "min-height": "100vh" }}>
       <Navbar></Navbar>
@@ -97,6 +102,7 @@ export default function NFTPage(props) {
           <div>
             Owner: <span className="text-sm">{data.owner}</span>
           </div>
+
           <div>
             Seller: <span className="text-sm">{data.seller}</span>
           </div>
@@ -111,6 +117,12 @@ export default function NFTPage(props) {
             ) : (
               <div className="text-emerald-700">
                 <p>You are the owner of the NFT</p>
+                <button
+                  className="enableEthereumButton bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded text-sm"
+                  //   onClick={() => ListNFT(tokenId)}
+                >
+                  List NFT
+                </button>
               </div>
             )}
 

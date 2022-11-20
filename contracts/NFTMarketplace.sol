@@ -15,8 +15,9 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract NFTMarketplace is ERC721URIStorage, Ownable {
+contract NFTMarketplace is ERC721URIStorage, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds; //_tokenIds variable has the most recent minted tokenId
@@ -29,7 +30,7 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         address payable owner;
         address payable seller;
         uint256 price;
-        bool currentlyListed; //NFT is listed on marketplace by default
+        bool currentlyListed;
     }
 
     //the event emitted when a token is successfully listed
@@ -39,6 +40,14 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         address seller,
         uint256 price,
         bool currentlyListed
+    );
+
+    event NftSold(
+        uint256 indexed tokenId,
+        address buyer,
+        address seller,
+        uint256 soldFor,
+        uint256 feeTaken
     );
 
     event WithdrawSaleFunds(address owner, uint256 amountWithdrawn);
@@ -100,22 +109,27 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
 
         _setTokenURI(newTokenId, tokenURI); //Maps the tokenId to the tokenURI (which is an IPFS URL with the NFT metadata)
 
-        createListedToken(newTokenId, price); //Helper function to update Global variables and emit an event
+        _listToken(newTokenId, price); //Helper function to update Global variables and emit an event
 
         return newTokenId;
     }
 
-    function createListedToken(uint256 tokenId, uint256 price) private {
-        //Update the mapping of tokenId's to Token details, useful for retrieval functions
-        idToListedToken[tokenId] = ListedToken(
-            tokenId,
-            payable(address(this)),
-            payable(msg.sender),
-            price,
-            true
-        );
+    function listToken(uint256 tokenId, uint256 price) public nonReentrant {
+        require(ownerOf(tokenId) == msg.sender, "Only NFT owner can list");
+        _listToken(tokenId, price);
+    }
+
+    function _listToken(uint256 tokenId, uint256 price) private {
         //transfer ownership of NFT from creator to smart contract
         _transfer(msg.sender, address(this), tokenId);
+        //Update the mapping of tokenId's to Token details, useful for retrieval functions
+
+        idToListedToken[tokenId].tokenId = tokenId;
+        idToListedToken[tokenId].owner = payable(address(this));
+        idToListedToken[tokenId].seller = payable(msg.sender);
+        idToListedToken[tokenId].price = price;
+        idToListedToken[tokenId].currentlyListed = true;
+
         //Emit the event for successful transfer. The frontend parses this message and updates the end user
         emit TokenListedSuccess(
             tokenId,
@@ -136,9 +150,11 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         //filter out currentlyListed == false over here
         for (uint256 i = 0; i < nftCount; i++) {
             currentId = i + 1;
-            ListedToken storage currentItem = idToListedToken[currentId];
-            tokens[currentIndex] = currentItem;
-            currentIndex = currentIndex + 1;
+
+            if (idToListedToken[currentId].currentlyListed) {
+                tokens[currentIndex] = idToListedToken[currentId];
+                currentIndex = currentIndex + 1;
+            }
         }
         //the array 'tokens' has the list of all NFTs in the marketplace
         return tokens;
@@ -177,7 +193,7 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
     }
 
     //transfers ownership and value, updates mapping
-    function executeSale(uint256 tokenId) public payable {
+    function executeSale(uint256 tokenId) public payable nonReentrant{
         uint256 price = idToListedToken[tokenId].price;
         address seller = idToListedToken[tokenId].seller;
         uint256 bidPrice = msg.value;
@@ -196,6 +212,8 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         uint256 amountToSeller = bidPrice - marketplaceFee;
 
         payable(seller).transfer(amountToSeller); //Transfer the proceeds from the sale to the seller of the NFT
+
+        emit NftSold(tokenId, msg.sender, seller, bidPrice, marketplaceFee);
     }
 
     function withdrawSaleFunds() external onlyOwner {
@@ -206,7 +224,7 @@ contract NFTMarketplace is ERC721URIStorage, Ownable {
         emit WithdrawSaleFunds(owner(), balance);
     }
 
-    //We might add a resell token function in the future
-    //In that case, tokens won't be listed by default but users can send a request to actually list a token
-    //Currently NFTs are listed by default
+
+
+
 }
